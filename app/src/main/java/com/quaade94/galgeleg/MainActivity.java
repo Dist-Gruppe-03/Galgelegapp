@@ -36,15 +36,13 @@ public class MainActivity extends AppCompatActivity {
         guessButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //TODO:
                 updateView();
             }
         });
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //TODO:
-                startActivity(new Intent(getApplicationContext(), FrontPage.class));
+                startActivity(new Intent(getApplicationContext(), Frontpage.class));
             }
         });
     }

@@ -1,6 +1,7 @@
 package com.quaade94.galgeleg;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -13,10 +14,13 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView wrongLetter, correctLetter;
+    TextView wrongLetter, correctLetter, response, name;
     EditText input;
     ImageView image;
-    Button guessButton, backButton;
+    Button guessButton;
+    RESTAPI RA = RESTAPI.getInstance();
+    private final long PERIOD = 1000L;
+    private long lastTime = System.currentTimeMillis()-PERIOD;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,34 +30,50 @@ public class MainActivity extends AppCompatActivity {
 
         input = (EditText) findViewById(R.id.input_view);
         guessButton = (Button) findViewById(R.id.guess_button);
-        backButton = (Button) findViewById(R.id.back_button);
+        name = (TextView) findViewById(R.id.name);
+        response = (TextView) findViewById(R.id.response);
         wrongLetter = (TextView) findViewById(R.id.wrongLetter_view);
         correctLetter = (TextView) findViewById(R.id.correctLetter_view);
         image = (ImageView) findViewById(R.id.image_view);
 
-        updateView();
+        long thisTime = System.currentTimeMillis();
+        if((thisTime -lastTime) >= PERIOD){
+            lastTime = thisTime;
 
+            updateView();
+
+        }
         guessButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                updateView();
+                if(RA.getGameOver()){
+                    RA.resetGame();
+                }else{
+                    RA.guessLetter(input.getText().toString());
+                }
+
+                    updateView();
+
+
             }
         });
-        backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(getApplicationContext(), Frontpage.class));
-            }
-        });
+
     }
 
     private void updateView(){
+        if(RA.getGameOver()){
+            guessButton.setText("NYT SPIL");
+            guessButton.setBackgroundColor(Color.BLACK);
+        }else{
+            guessButton.setText("GÆT!");
+            guessButton.setBackgroundColor(Color.GREEN) ;
+        }
         input.setText("");
-        //TODO: insert strings
-        wrongLetter.setText("");
-        correctLetter.setText("");
-        //TODO: insert correct value
-        switch (0) {
+        name.setText(RA.getUserID() + " " + RA.getName());
+        response.setText(RA.getResponse());
+        wrongLetter.setText(RA.usedLetters);
+        correctLetter.setText(RA.getinvisibleWord());
+        switch (RA.getWrongLetters()) {
             case 0:
                 image.setImageResource(R.mipmap.galge);
                 break;

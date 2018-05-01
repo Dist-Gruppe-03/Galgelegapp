@@ -37,10 +37,16 @@ public class Frontpage extends Activity {
             public void onClick(View view) {
                 Log.e("Activtiy","STARTER");
                 button.setText("Arbejder");
-                RA.connect();
+                RA.connect("");
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 if(RA.loginRequest(user.getText().toString(),pass.getText().toString())){
                     startActivity(new Intent(getApplicationContext(), MainActivity.class));
                 }
+
             }
         });
     }

@@ -42,15 +42,21 @@ public class RESTAPI {
     String response;
     String gameOver;
     String wrongLetters;
+    String request = "";
+    boolean loading = false;
 
 
-    void connect(){
+
+
+    void connect(String req){
+        loading = true;
+        setRequest(req);
         class AsyncTask1 extends AsyncTask {
             @Override
             protected Object doInBackground(Object... arg0) {
                 try {
                         // Create URL
-                        githubEndpoint = new URL("http://ubuntu4.saluton.dk:38055/RestServer/hangman/play/json/s114992");
+                        githubEndpoint = new URL("http://ubuntu4.saluton.dk:38055/RestServer/hangman/play/json/s114992" + request);
                         // Create connection
                         myConnection = (HttpURLConnection) githubEndpoint.openConnection();
                         // Test connection
@@ -59,30 +65,6 @@ public class RESTAPI {
                         } else {
                             Log.e("ASYNC Connection","CONNECTION FAILED");
                         }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-            @Override
-            protected void onPostExecute(Object result) {
-                updateData();
-            }
-        }
-        AsyncTask1 a = new AsyncTask1();
-        a.execute();
-    }
-
-    void updateData(){
-        class AsyncTask1 extends AsyncTask {
-            @Override
-            protected Object doInBackground(Object... arg0) {
-                try {
-                    if (myConnection.getResponseCode() == 200) {
-                        Log.e("ASYNC Update","CONNECTION SUCCESS");
-                    } else {
-                        Log.e("ASYNC Update","CONNECTION FAILED");
-                    }
                     responseBody = myConnection.getInputStream();
                     responseBodyReader = new InputStreamReader(responseBody, "UTF-8");
                 } catch (Exception e) {
@@ -95,42 +77,29 @@ public class RESTAPI {
                 jsonReader = new JsonReader(responseBodyReader);
                 try {
                     jsonReader.beginObject();
+                    setValues();
+                    jsonReader.close();
+                    myConnection.disconnect();
+                    loading = false;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                setValues();
-                //TODO: remove this disconnect
-                disconnect();
+                Log.e("ASYNC Connection","CONNECTION DISCONNECTED");
             }
         }
         AsyncTask1 a = new AsyncTask1();
         a.execute();
     }
+
+    private void setRequest(String request) {
+        this.request = request;
+    }
+
 
     boolean loginRequest(String user, String pass){
+
         //TODO: Implement method
         return true;
-    }
-
-    void disconnect(){
-        class AsyncTask1 extends AsyncTask {
-        @Override
-        protected Object doInBackground(Object... arg0) {
-            try {
-                jsonReader.close();
-                myConnection.disconnect();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-        @Override
-        protected void onPostExecute(Object result) {
-            Log.e("ASYNC Connection","CONNECTION DISCONNECTED");
-        }
-    }
-        AsyncTask1 a = new AsyncTask1();
-        a.execute();
     }
 
     String getValue(String theKey){
@@ -147,7 +116,6 @@ public class RESTAPI {
                     jsonReader.skipValue(); // Skip values of other keys
                 }
             }
-            //jsonReader.close();
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -200,8 +168,24 @@ public class RESTAPI {
         }
     }
 
-    String getWrongLetters(){
-        return wrongLetters;
+    int getWrongLetters(){
+        return Integer.parseInt(wrongLetters);
     }
 
+    public void guessLetter(String s) {
+        connect("?letter=" + s);
+    }
+
+    public void resetGame(){
+        connect("?reset=true");
+    }
+
+    public boolean isLoading(){
+        return loading;
+    }
+
+    public void sleep(){
+
+
+    }
 }

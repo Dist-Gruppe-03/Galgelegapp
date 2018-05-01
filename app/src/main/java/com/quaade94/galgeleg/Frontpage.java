@@ -3,7 +3,9 @@ package com.quaade94.galgeleg;
 import android.app.Activity;
 import android.app.ListActivity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.JsonReader;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -11,6 +13,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 /**
  * Created by Quaade94 on 15/01/2017.
@@ -37,16 +44,26 @@ public class Frontpage extends Activity {
             public void onClick(View view) {
                 Log.e("Activtiy","STARTER");
                 button.setText("Arbejder");
-                RA.connect("");
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                class AsyncTask1 extends AsyncTask {
+                    @Override
+                    protected Object doInBackground(Object... arg0) {
+                        try {
+                            RA.connect("");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+                    @Override
+                    protected void onPostExecute(Object result) {
+                        if(RA.loginRequest(user.getText().toString(),pass.getText().toString())){
+                            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                        }
+                        button.setText("Færdig");
+                    }
                 }
-                if(RA.loginRequest(user.getText().toString(),pass.getText().toString())){
-                    startActivity(new Intent(getApplicationContext(), MainActivity.class));
-                }
-
+                AsyncTask1 a = new AsyncTask1();
+                a.execute();
             }
         });
     }

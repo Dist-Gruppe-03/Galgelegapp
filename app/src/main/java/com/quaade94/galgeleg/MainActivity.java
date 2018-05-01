@@ -2,6 +2,7 @@ package com.quaade94.galgeleg;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -19,8 +20,6 @@ public class MainActivity extends AppCompatActivity {
     ImageView image;
     Button guessButton;
     RESTAPI RA = RESTAPI.getInstance();
-    private final long PERIOD = 1000L;
-    private long lastTime = System.currentTimeMillis()-PERIOD;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,28 +35,35 @@ public class MainActivity extends AppCompatActivity {
         correctLetter = (TextView) findViewById(R.id.correctLetter_view);
         image = (ImageView) findViewById(R.id.image_view);
 
-        long thisTime = System.currentTimeMillis();
-        if((thisTime -lastTime) >= PERIOD){
-            lastTime = thisTime;
+        updateView();
 
-            updateView();
 
-        }
         guessButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(RA.getGameOver()){
-                    RA.resetGame();
-                }else{
-                    RA.guessLetter(input.getText().toString());
+                class AsyncTask1 extends AsyncTask {
+                    @Override
+                    protected Object doInBackground(Object... arg0) {
+                        try {
+                            if(RA.getGameOver()){
+                                RA.resetGame();
+                            }else{
+                                RA.guessLetter(input.getText().toString());
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+                    @Override
+                    protected void onPostExecute(Object result) {
+                        updateView();
+                    }
                 }
-
-                    updateView();
-
-
+                AsyncTask1 a = new AsyncTask1();
+                a.execute();
             }
         });
-
     }
 
     private void updateView(){

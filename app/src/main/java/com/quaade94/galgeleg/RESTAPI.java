@@ -19,13 +19,21 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class RESTAPI {
 
+    private static RESTAPI instance;
+
+    public static RESTAPI getInstance(){
+        if(instance == null){
+            instance = new RESTAPI();
+            System.out.println("RESTAPI.instance var NULL - frisk start! Opretter en instance");
+        }
+        return instance;
+    }
 
     URL githubEndpoint;
     HttpURLConnection myConnection;
     InputStream responseBody;
     InputStreamReader responseBodyReader;
     JsonReader jsonReader;
-    String value;
     String userID;
     String name;
     String invisibleWord;
@@ -36,75 +44,110 @@ public class RESTAPI {
     String wrongLetters;
 
 
-
-    void connect() {
-        final String[] value = new String[1];
-
+    void connect(){
         class AsyncTask1 extends AsyncTask {
             @Override
             protected Object doInBackground(Object... arg0) {
                 try {
-                    // Create URL
-                    githubEndpoint = new URL("http://ubuntu4.saluton.dk:38055/RestServer/hangman/play/json/s114992");
-
-                    // Create connection
-                    myConnection = (HttpURLConnection) githubEndpoint.openConnection();
-                    if (myConnection.getResponseCode() == 200) {
-                        // Success
-                        // Further processing here
-
-                        Log.e("Activity","CONNECTION WORKS");
-                    } else {
-                        Log.e("Activity","CONNECTION FAILED");
-
-                        // Error handling code goes here
-                    }
-                    responseBody = myConnection.getInputStream();
-                    responseBodyReader = new InputStreamReader(responseBody, "UTF-8");
-
-
-                } catch (IOException e) {
-                    e.printStackTrace();
+                        // Create URL
+                        githubEndpoint = new URL("http://ubuntu4.saluton.dk:38055/RestServer/hangman/play/json/s114992");
+                        // Create connection
+                        myConnection = (HttpURLConnection) githubEndpoint.openConnection();
+                        // Test connection
+                        if (myConnection.getResponseCode() == 200) {
+                            Log.e("ASYNC Connection","CONNECTION SUCCESS");
+                        } else {
+                            Log.e("ASYNC Connection","CONNECTION FAILED");
+                        }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
                 return null;
             }
-
             @Override
             protected void onPostExecute(Object result) {
-
-                setValues();
-                myConnection.disconnect();
-
+                updateData();
             }
         }
         AsyncTask1 a = new AsyncTask1();
         a.execute();
+    }
 
+    void updateData(){
+        class AsyncTask1 extends AsyncTask {
+            @Override
+            protected Object doInBackground(Object... arg0) {
+                try {
+                    if (myConnection.getResponseCode() == 200) {
+                        Log.e("ASYNC Update","CONNECTION SUCCESS");
+                    } else {
+                        Log.e("ASYNC Update","CONNECTION FAILED");
+                    }
+                    responseBody = myConnection.getInputStream();
+                    responseBodyReader = new InputStreamReader(responseBody, "UTF-8");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+            @Override
+            protected void onPostExecute(Object result) {
+                jsonReader = new JsonReader(responseBodyReader);
+                try {
+                    jsonReader.beginObject();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                setValues();
+                //TODO: remove this disconnect
+                disconnect();
+            }
+        }
+        AsyncTask1 a = new AsyncTask1();
+        a.execute();
+    }
 
+    boolean loginRequest(String user, String pass){
+        //TODO: Implement method
+        return true;
+    }
+
+    void disconnect(){
+        class AsyncTask1 extends AsyncTask {
+        @Override
+        protected Object doInBackground(Object... arg0) {
+            try {
+                jsonReader.close();
+                myConnection.disconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+        @Override
+        protected void onPostExecute(Object result) {
+            Log.e("ASYNC Connection","CONNECTION DISCONNECTED");
+        }
+    }
+        AsyncTask1 a = new AsyncTask1();
+        a.execute();
     }
 
     String getValue(String theKey){
         String value = "";
-        jsonReader = new JsonReader(responseBodyReader);
         try {
-            jsonReader.beginObject(); // Start processing the JSON object
-            while (jsonReader.hasNext()) { // Loop through all keys
-                String key = jsonReader.nextName(); // Fetch the next key
-                if (key.equals(theKey)) { // Check if desired key
-                    // Fetch the value as a String
+
+            while (jsonReader.hasNext()) {
+                String key = jsonReader.nextName();
+                if (key.equals(theKey)) {
                     value = jsonReader.nextString();
-                    Log.e("Activtiy","USER ID IS: " + value);
-                    // Do something with the value
-                    // ...
-                    break; // Break out of the loop
+                    Log.e("JSON Reader","USER ID IS: " + value);
+                    break;
                 } else {
                     jsonReader.skipValue(); // Skip values of other keys
                 }
             }
-            jsonReader.close();
+            //jsonReader.close();
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -152,7 +195,7 @@ public class RESTAPI {
         if(gameOver.equals("true")) return true;
         if(gameOver.equals("false")) return false;
         else{
-            Log.e("RESTAPI","THE GAME IS NEITHER OVER OR NOT, SEE RESTAPI.java");
+            Log.e("GAMEOVER","SOMETHING WENT WRONG, SEE RESTAPI.java");
             return false;
         }
     }

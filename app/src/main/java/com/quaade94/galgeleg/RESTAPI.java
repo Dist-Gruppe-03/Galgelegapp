@@ -44,11 +44,11 @@ public class RESTAPI {
     String wrongLetters;
 
 
-    void connect(String request){
+    boolean connect(String userid, String request){
 
                 try {
                     // Create URL
-                    githubEndpoint = new URL("http://ubuntu4.saluton.dk:38055/RestServer/hangman/play/json/s114992" + request);
+                    githubEndpoint = new URL("http://ubuntu4.saluton.dk:38055/RestServer/hangman/play/json/" + userid + request);
                     // Create connection
                     myConnection = (HttpURLConnection) githubEndpoint.openConnection();
                     // Test connection
@@ -65,13 +65,15 @@ public class RESTAPI {
                     jsonReader.close();
                     myConnection.disconnect();
                     Log.e("ASYNC Connection","CONNECTION DISCONNECTED");
+                    return true;
                 } catch (Exception e) {
                     e.printStackTrace();
+                    return false;
                 }
     }
 
     boolean loginRequest(String user, String pass){
-
+        this.userID = user;
         //TODO: Implement method
         return true;
     }
@@ -152,10 +154,10 @@ public class RESTAPI {
     }
 
     public void guessLetter(String s) {
-        connect("?letter=" + s);
+        connect(userID,"?letter=" + s);
     }
 
     public void resetGame(){
-        connect("?reset=true");
+        connect(userID, "?reset=true");
     }
 }

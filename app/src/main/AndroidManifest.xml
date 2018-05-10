@@ -17,7 +17,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity" android:screenOrientation="portrait"/>
-        <activity android:name=".Asynkron2AsyncTask" android:screenOrientation="portrait"/>
     </application>
 
 </manifest>

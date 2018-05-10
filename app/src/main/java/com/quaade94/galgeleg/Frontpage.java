@@ -1,7 +1,9 @@
 package com.quaade94.galgeleg;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -13,6 +15,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,6 +31,9 @@ public class Frontpage extends Activity {
     EditText user, pass;
     Button button;
     RESTAPI RA = RESTAPI.getInstance();
+    boolean connectionSuccess;
+    AlertDialog alertDialog;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,32 +44,60 @@ public class Frontpage extends Activity {
         button = (Button) findViewById(R.id.button);
         user = (EditText) findViewById(R.id.username);
         pass = (EditText) findViewById(R.id.password);
+        button.setText("Login");
+        alertDialog = new AlertDialog.Builder(Frontpage.this).create();
+        alertDialog.setTitle("Fejl");
+        alertDialog.setMessage("Alert message to be shown");
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.e("Activtiy","STARTER");
-                button.setText("Arbejder");
-                class AsyncTask1 extends AsyncTask {
-                    @Override
-                    protected Object doInBackground(Object... arg0) {
-                        try {
-                            RA.connect("");
-                        } catch (Exception e) {
-                            e.printStackTrace();
+
+                String input = user.getText().toString();
+
+                //TODO: TEST THIS
+                if(input.contains("s") && input.length() == 7){
+                    Log.e("Activtiy", "STARTER");
+                    button.setText("Arbejder..");
+                    class AsyncTask1 extends AsyncTask {
+                        @Override
+                        protected Object doInBackground(Object... arg0) {
+                            try {
+                                connectionSuccess = RA.connect(user.getText().toString(), "");
+                            } catch (Exception e) {
+
+                                e.printStackTrace();
+                            }
+                            return null;
                         }
-                        return null;
-                    }
-                    @Override
-                    protected void onPostExecute(Object result) {
-                        if(RA.loginRequest(user.getText().toString(),pass.getText().toString())){
-                            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+
+                        @Override
+                        protected void onPostExecute(Object result) {
+                            if(!connectionSuccess){
+                                alertDialog.setMessage("Der kan ikke oprettes forbindelse til serveren, prøv igen senere");
+                                alertDialog.show();
+                                button.setText("Prøv igen");
+                            } else if (RA.loginRequest(user.getText().toString(), pass.getText().toString())) {
+                                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                                button.setText("Færdig");
+                            } else {
+                                Toast errorToast = Toast.makeText(Frontpage.this, "Forkert bruger/adgangskode", Toast.LENGTH_SHORT);
+                                errorToast.show();
+                            }
                         }
-                        button.setText("Færdig");
                     }
+                    AsyncTask1 a = new AsyncTask1();
+                    a.execute();
+                }else {
+                    alertDialog.setMessage("Brugernavn skal have formen: sXXXXXX");
+                    alertDialog.show();
                 }
-                AsyncTask1 a = new AsyncTask1();
-                a.execute();
             }
         });
     }

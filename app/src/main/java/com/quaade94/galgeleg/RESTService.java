@@ -1,39 +1,39 @@
 package com.quaade94.galgeleg;
 
-import android.os.AsyncTask;
 import android.util.JsonReader;
+import android.util.JsonWriter;
 import android.util.Log;
 
-import java.io.IOException;
+import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
-import javax.net.ssl.HttpsURLConnection;
 
 /**
  * Created by Quaade94 on 24/04/2018.
  */
 
-public class RESTAPI {
+public class RESTService {
 
-    private static RESTAPI instance;
+    private static RESTService instance;
 
-    public static RESTAPI getInstance(){
+    public static RESTService getInstance(){
         if(instance == null){
-            instance = new RESTAPI();
-            System.out.println("RESTAPI.instance var NULL - frisk start! Opretter en instance");
+            instance = new RESTService();
+            System.out.println("RESTService.instance var NULL - frisk start! Opretter en instance");
         }
         return instance;
     }
 
-    URL githubEndpoint;
+    URL httpbinEndpoint;
     HttpURLConnection myConnection;
     InputStream responseBody;
     InputStreamReader responseBodyReader;
+    OutputStreamWriter responseBodyWriter;
     JsonReader jsonReader;
+    JsonWriter jsonWriter;
     String userID;
     String name;
     String invisibleWord;
@@ -42,24 +42,29 @@ public class RESTAPI {
     String response;
     String gameOver;
     String wrongLetters;
+    String url;
+    boolean loginFailed;
 
 
-    boolean connect(String userid, String request){
-
+    boolean connect(String request){
                 try {
-                    // Create URL
-                    githubEndpoint = new URL("http://ubuntu4.saluton.dk:38055/RestServer/hangman/play/json/" + userid + request);
+                    //url
+                    httpbinEndpoint = new URL(url + request);
+                    Log.e("CONNECT","TRYING TO CONNECT WITH URL: " + url + " WITH REQUEST: " + request);
                     // Create connection
-                    myConnection = (HttpURLConnection) githubEndpoint.openConnection();
+                    myConnection = (HttpURLConnection) httpbinEndpoint.openConnection();
+                    myConnection.setRequestMethod("GET");
                     // Test connection
                     if (myConnection.getResponseCode() == 200) {
                         Log.e("ASYNC Connection","CONNECTION SUCCESS");
                     } else {
                         Log.e("ASYNC Connection","CONNECTION FAILED");
+                        return false;
                     }
                     responseBody = myConnection.getInputStream();
                     responseBodyReader = new InputStreamReader(responseBody, "UTF-8");
                     jsonReader = new JsonReader(responseBodyReader);
+
                     jsonReader.beginObject();
                     setValues();
                     jsonReader.close();
@@ -73,9 +78,35 @@ public class RESTAPI {
     }
 
     boolean loginRequest(String user, String pass){
-        this.userID = user;
+        try{
+            this.userID = user;
+            httpbinEndpoint = new URL("http://ubuntu4.saluton.dk:38055/RestServer/hangman/login/");
+            // Create connection
+            myConnection = (HttpURLConnection) httpbinEndpoint.openConnection();
+            myConnection.setRequestMethod("POST");
+            myConnection.setRequestProperty("Content-Type", "application/json");
+            // Enable writing
+            myConnection.setDoOutput(true);
+            // Write the data
+            myConnection.getOutputStream().write(("{\"username\" : \"" + user + "\", \"password\" : \"" + pass + "\"}").getBytes());
+            InputStream responseBody = myConnection.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(responseBody));
+            url = reader.readLine();
+            if(url!=null){
+                Log.e("ENDPOINT","ENDPOINT SET TO: " + url);
+                loginFailed = false;
+            }else{
+                loginFailed = true;
+                Log.e("ENDPOINT FAIL","ENDPOINT SET TO: " + url);
+            }
+            myConnection.disconnect();
+            return true;
+
+        }catch (Exception e ){
+            e.printStackTrace();
+            return false;
+        }
         //TODO: Implement method
-        return true;
     }
 
     String getValue(String theKey){
@@ -135,11 +166,15 @@ public class RESTAPI {
         return response;
     }
 
+    boolean getLoginFailed(){
+        return loginFailed;
+    }
+
     boolean getGameOver(){
         if(gameOver.equals("true")) return true;
         if(gameOver.equals("false")) return false;
         else{
-            Log.e("GAMEOVER","SOMETHING WENT WRONG, SEE RESTAPI.java");
+            Log.e("GAMEOVER","SOMETHING WENT WRONG, SEE RESTService.java");
             return false;
         }
     }
@@ -154,10 +189,10 @@ public class RESTAPI {
     }
 
     public void guessLetter(String s) {
-        connect(userID,"?letter=" + s);
+        connect("?letter=" + s);
     }
 
     public void resetGame(){
-        connect(userID, "?reset=true");
+        connect("?reset=true");
     }
 }

@@ -2,25 +2,16 @@ package com.quaade94.galgeleg;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ListActivity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.JsonReader;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 /**
  * Created by Quaade94 on 15/01/2017.
@@ -30,7 +21,7 @@ public class Frontpage extends Activity {
 
     EditText user, pass;
     Button button;
-    RESTAPI RA = RESTAPI.getInstance();
+    RESTService RS = RESTService.getInstance();
     boolean connectionSuccess;
     AlertDialog alertDialog;
 
@@ -62,14 +53,17 @@ public class Frontpage extends Activity {
                 String input = user.getText().toString();
 
                 //TODO: TEST THIS
-                if(input.contains("s") && input.length() == 7){
+                if(input.contains("s") && input.length() == 7 && pass.getText() != null){
                     Log.e("Activtiy", "STARTER");
                     button.setText("Arbejder..");
                     class AsyncTask1 extends AsyncTask {
                         @Override
                         protected Object doInBackground(Object... arg0) {
+
                             try {
-                                connectionSuccess = RA.connect(user.getText().toString(), "");
+                                //connectionSuccess = RS.connect(user.getText().toString(), "");
+                                connectionSuccess = RS.loginRequest(user.getText().toString(), pass.getText().toString());
+                                connectionSuccess = RS.connect("");
                             } catch (Exception e) {
 
                                 e.printStackTrace();
@@ -83,12 +77,13 @@ public class Frontpage extends Activity {
                                 alertDialog.setMessage("Der kan ikke oprettes forbindelse til serveren, prøv igen senere");
                                 alertDialog.show();
                                 button.setText("Prøv igen");
-                            } else if (RA.loginRequest(user.getText().toString(), pass.getText().toString())) {
-                                startActivity(new Intent(getApplicationContext(), MainActivity.class));
-                                button.setText("Færdig");
-                            } else {
+                            } else if(RS.loginFailed){
                                 Toast errorToast = Toast.makeText(Frontpage.this, "Forkert bruger/adgangskode", Toast.LENGTH_SHORT);
                                 errorToast.show();
+                                button.setText("Login");
+                            }else {
+                                button.setText("Færdig");
+                                startActivity(new Intent(getApplicationContext(), MainActivity.class));
                             }
                         }
                     }

@@ -1,6 +1,5 @@
 package com.quaade94.galgeleg;
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
@@ -19,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
     EditText input;
     ImageView image;
     Button guessButton;
-    RESTAPI RA = RESTAPI.getInstance();
+    RESTService RS = RESTService.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,10 +44,10 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     protected Object doInBackground(Object... arg0) {
                         try {
-                            if(RA.getGameOver()){
-                                RA.resetGame();
+                            if(RS.getGameOver()){
+                                RS.resetGame();
                             }else{
-                                RA.guessLetter(input.getText().toString());
+                                RS.guessLetter(input.getText().toString());
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -67,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateView(){
-        if(RA.getGameOver()){
+        if(RS.getGameOver()){
             guessButton.setText("NYT SPIL");
             guessButton.setBackgroundColor(Color.BLACK);
         }else{
@@ -75,11 +74,11 @@ public class MainActivity extends AppCompatActivity {
             guessButton.setBackgroundColor(Color.GREEN) ;
         }
         input.setText("");
-        name.setText(RA.getUserID() + " " + RA.getName());
-        response.setText(RA.getResponse());
-        wrongLetter.setText(RA.usedLetters);
-        correctLetter.setText(RA.getinvisibleWord());
-        switch (RA.getWrongLetters()) {
+        name.setText(RS.getUserID() + " " + RS.getName());
+        response.setText(RS.getResponse());
+        wrongLetter.setText(RS.usedLetters);
+        correctLetter.setText(RS.getinvisibleWord());
+        switch (RS.getWrongLetters()) {
             case 0:
                 image.setImageResource(R.mipmap.galge);
                 break;

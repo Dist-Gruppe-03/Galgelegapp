@@ -26,6 +26,7 @@ public class Frontpage extends Activity {
     AlertDialog alertDialog;
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,67 +50,72 @@ public class Frontpage extends Activity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                button.setClickable(false);
                 String input = user.getText().toString();
-                if(input.contains("s") && input.length() == 7 && pass.getText() != null){
-                    Log.e("FrontActivity", "Input korrekt, starter første forbindelse");
-                    button.setText("Arbejder..");
-                    class AsyncTask1 extends AsyncTask {
-                        @Override
-                        protected Object doInBackground(Object... arg0) {
-                            try {
-                                //connectionSuccess = RS.connect(user.getText().toString(), "");
-                                connectionSuccess = RS.loginRequest(user.getText().toString(), pass.getText().toString());
-                            } catch (Exception e) {
+                    if (input.contains("s") && input.length() == 7 && pass.getText() != null) {
+                        Log.e("FrontActivity", "Input korrekt, starter første forbindelse");
+                        button.setText("Arbejder..");
+                        class AsyncTask1 extends AsyncTask {
+                            @Override
+                            protected Object doInBackground(Object... arg0) {
+                                try {
+                                    //connectionSuccess = RS.connect(user.getText().toString(), "");
+                                    connectionSuccess = RS.loginRequest(user.getText().toString(), pass.getText().toString());
+                                } catch (Exception e) {
 
-                                e.printStackTrace();
-                            }
-                            return null;
-                        }
-                        @Override
-                        protected void onPostExecute(Object result) {
-                            if(!connectionSuccess){
-                                alertDialog.setMessage("Der kan ikke oprettes forbindelse til serveren, prøv igen senere");
-                                alertDialog.show();
-                                button.setText("Prøv igen");
-                            } else if(RS.loginFailed){
-                                Toast errorToast = Toast.makeText(Frontpage.this, "Forkert bruger/adgangskode", Toast.LENGTH_SHORT);
-                                errorToast.show();
-                                button.setText("Login");
-                            }else {
-                                button.setText("Færdig");
-                                class AsyncTask2 extends AsyncTask {
-                                    @Override
-                                    protected Object doInBackground(Object... arg0) {
-                                        try {
-                                            connectionSuccess = RS.connect();
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
-                                        return null;
-                                    }
-                                    @Override
-                                    protected void onPostExecute(Object result) {
-                                        Log.e("Frontpage","Login complete, launching game");
-                                        if(connectionSuccess){
-                                            startActivity(new Intent(getApplicationContext(), MainActivity.class));
-                                        }else{
-                                            alertDialog.setMessage("Der kan ikke oprettes forbindelse til serveren, prøv igen senere");
-                                            alertDialog.show();
-                                            button.setText("Prøv igen");
-                                        }
-                                    }
+                                    e.printStackTrace();
                                 }
-                                AsyncTask2 a2 = new AsyncTask2();
-                                a2.execute();
+                                return null;
+                            }
+
+                            @Override
+                            protected void onPostExecute(Object result) {
+                                if (!connectionSuccess) {
+                                    alertDialog.setMessage("Der kan ikke oprettes forbindelse til serveren, prøv igen senere");
+                                    alertDialog.show();
+                                    button.setText("Prøv igen");
+                                } else if (RS.loginFailed) {
+                                    Toast errorToast = Toast.makeText(Frontpage.this, "Forkert bruger/adgangskode", Toast.LENGTH_SHORT);
+                                    errorToast.show();
+                                    button.setText("Login");
+                                } else {
+                                    button.setText("Færdig");
+                                    class AsyncTask2 extends AsyncTask {
+                                        @Override
+                                        protected Object doInBackground(Object... arg0) {
+                                            try {
+                                                connectionSuccess = RS.connect();
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            }
+                                            return null;
+                                        }
+
+                                        @Override
+                                        protected void onPostExecute(Object result) {
+                                            Log.e("Frontpage", "Login complete, launching game");
+                                            if (connectionSuccess) {
+                                                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                                            } else {
+                                                alertDialog.setMessage("Der kan ikke oprettes forbindelse til serveren, prøv igen senere");
+                                                alertDialog.show();
+                                                button.setText("Prøv igen");
+                                            }
+                                            button.setClickable(true);
+                                        }
+                                    }
+                                    AsyncTask2 a2 = new AsyncTask2();
+                                    a2.execute();
+                                }
                             }
                         }
+                        AsyncTask1 a = new AsyncTask1();
+                        a.execute();
+                    } else {
+                        alertDialog.setMessage("Brugernavn skal have formen: sXXXXXX");
+                        alertDialog.show();
                     }
-                    AsyncTask1 a = new AsyncTask1();
-                    a.execute();
-                }else {
-                    alertDialog.setMessage("Brugernavn skal have formen: sXXXXXX");
-                    alertDialog.show();
-                }
+
             }
         });
     }

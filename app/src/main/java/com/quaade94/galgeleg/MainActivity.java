@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
         guessButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                guessButton.setClickable(false);
                 guessButton.setText("Arbejder..");
                 class AsyncTask1 extends AsyncTask {
                     @Override
@@ -99,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateView(){
+        guessButton.setClickable(true);
         if(RS.getGameOver()){
             guessButton.setText("NYT SPIL");
             guessButton.setBackgroundColor(Color.BLACK);

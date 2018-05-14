@@ -1,5 +1,7 @@
 package com.quaade94.galgeleg;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +21,8 @@ public class MainActivity extends AppCompatActivity {
     ImageView image;
     Button guessButton;
     RESTService RS = RESTService.getInstance();
+    AlertDialog alertDialog;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +37,15 @@ public class MainActivity extends AppCompatActivity {
         wrongLetter = (TextView) findViewById(R.id.wrongLetter_view);
         correctLetter = (TextView) findViewById(R.id.correctLetter_view);
         image = (ImageView) findViewById(R.id.image_view);
+        alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+        alertDialog.setTitle("Fejl");
+        alertDialog.setMessage("Alert message to be shown");
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
 
         updateView();
 
@@ -56,6 +69,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                     @Override
                     protected void onPostExecute(Object result) {
+                        if(!RS.connect()){
+                            alertDialog.setMessage("Der kan ikke oprettes forbindelse til serveren, prøv igen senere");
+                            alertDialog.show();
+                        };
                         updateView();
                     }
                 }

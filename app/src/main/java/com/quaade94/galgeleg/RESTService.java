@@ -5,11 +5,15 @@ import android.util.JsonWriter;
 import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Created by Quaade94 on 24/04/2018.
@@ -29,42 +33,37 @@ public class RESTService {
 
     URL httpbinEndpoint;
     HttpURLConnection myConnection;
-    InputStream responseBody;
-    InputStreamReader responseBodyReader;
-    OutputStreamWriter responseBodyWriter;
+    InputStream in;
+    OutputStream out;
+    InputStreamReader inReader;
+    OutputStreamWriter outWriter;
     JsonReader jsonReader;
     JsonWriter jsonWriter;
     String userID;
     String name;
     String invisibleWord;
     String usedLetters;
-    String guessedLetter;
     String response;
     String gameOver;
     String wrongLetters;
     String url;
+    String urlParameters;
+    DataOutputStream wr;
     boolean loginFailed;
 
 
-    boolean connect(String request){
+    boolean connect(){
                 try {
                     //url
-                    httpbinEndpoint = new URL(url + request);
-                    Log.e("CONNECT","TRYING TO CONNECT WITH URL: " + url + " WITH REQUEST: " + request);
+                    Log.e("CONNECT","TRYING TO CONNECT WITH URL: " + url);
+                    httpbinEndpoint = new URL(url);
                     // Create connection
                     myConnection = (HttpURLConnection) httpbinEndpoint.openConnection();
                     myConnection.setRequestMethod("GET");
-                    // Test connection
-                    if (myConnection.getResponseCode() == 200) {
-                        Log.e("ASYNC Connection","CONNECTION SUCCESS");
-                    } else {
-                        Log.e("ASYNC Connection","CONNECTION FAILED");
-                        return false;
-                    }
-                    responseBody = myConnection.getInputStream();
-                    responseBodyReader = new InputStreamReader(responseBody, "UTF-8");
-                    jsonReader = new JsonReader(responseBodyReader);
-
+                    myConnection.setRequestProperty("Content-Type", "application/json");
+                    in = myConnection.getInputStream();
+                    inReader = new InputStreamReader(in, "UTF-8");
+                    jsonReader = new JsonReader(inReader);
                     jsonReader.beginObject();
                     setValues();
                     jsonReader.close();
@@ -76,23 +75,48 @@ public class RESTService {
                     return false;
                 }
     }
-
     boolean loginRequest(String user, String pass){
         try{
             this.userID = user;
-            httpbinEndpoint = new URL("http://ubuntu4.saluton.dk:38055/RestServer/hangman/login/");
+            //set the start url
+            url = "http://ubuntu4.saluton.dk:38055/web/api/login";
+            httpbinEndpoint = new URL(url);
             // Create connection
+            Log.e("loginRequest", "starter forbindelse med url: " + url);
             myConnection = (HttpURLConnection) httpbinEndpoint.openConnection();
+            //set the request method
             myConnection.setRequestMethod("POST");
+            //set the header
             myConnection.setRequestProperty("Content-Type", "application/json");
             // Enable writing
             myConnection.setDoOutput(true);
+            //output
+            outWriter = new OutputStreamWriter(myConnection.getOutputStream());
+            //create JSON object to write to
+            jsonWriter = new JsonWriter(outWriter);
             // Write the data
-            myConnection.getOutputStream().write(("{\"username\" : \"" + user + "\", \"password\" : \"" + pass + "\"}").getBytes());
-            InputStream responseBody = myConnection.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(responseBody));
-            url = reader.readLine();
-            if(url!=null){
+            jsonWriter.beginObject();
+            jsonWriter.name("username").value(user);
+            jsonWriter.name("password").value(pass);
+            jsonWriter.endObject();
+            outWriter.write(jsonWriter.toString());
+            jsonWriter.close();
+            outWriter.close();
+            in = myConnection.getInputStream();
+            inReader = new InputStreamReader(in, "UTF-8");
+            jsonReader = new JsonReader(inReader);
+            try {
+                jsonReader.beginObject();
+                //retrieve url from JSON object
+                url = JsonReader("gamepath");
+                jsonReader.close();
+            }catch(EOFException e){
+                e.printStackTrace();
+            }
+            myConnection.disconnect();
+            Log.e("ASYNC Connection","CONNECTION DISCONNECTED");
+            //check to see if url is null
+            if(!url.equals("http://ubuntu4.saluton.dk:38055/web/api/login")){
                 Log.e("ENDPOINT","ENDPOINT SET TO: " + url);
                 loginFailed = false;
             }else{
@@ -109,7 +133,47 @@ public class RESTService {
         //TODO: Implement method
     }
 
-    String getValue(String theKey){
+    boolean resetAndLetter(String resetOrLetter, String letter){
+        try{
+            //set the start url
+            httpbinEndpoint = new URL(url);
+            // Create connection
+            Log.e("resetAndLetter", "starter forbindelse med url: " + url);
+            myConnection = (HttpURLConnection) httpbinEndpoint.openConnection();
+            //set the request method
+            myConnection.setRequestMethod("POST");
+            //set the header
+            myConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            // Enable writing
+            myConnection.setDoOutput(true);
+            //output
+            //outWriter = new OutputStreamWriter(myConnection.getOutputStream());
+            wr = new DataOutputStream(myConnection.getOutputStream());
+            if(resetOrLetter.equals("reset")){
+                urlParameters = "reset=true";
+            }else if (resetOrLetter.equals("letter")){
+                urlParameters = "letter=" + letter;
+            }else{
+                Log.e("resetAndLetter", "Noget gik galt med valg af reset/letter");
+            }
+            byte[] postData = urlParameters.getBytes( StandardCharsets.UTF_8 );
+            wr.write(postData);
+
+            //input
+            InputStream responseBody = myConnection.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(responseBody));
+            response = reader.readLine();
+            Log.e("reserAndLetter","response: " + response);
+            myConnection.disconnect();
+            return true;
+
+        }catch (Exception e ){
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    String JsonReader(String theKey){
         String value = "";
         try {
 
@@ -117,7 +181,7 @@ public class RESTService {
                 String key = jsonReader.nextName();
                 if (key.equals(theKey)) {
                     value = jsonReader.nextString();
-                    Log.e("JSON Reader","USER ID IS: " + value);
+                    Log.e("JSON Reader","Read from JSON: " + value);
                     break;
                 } else {
                     jsonReader.skipValue(); // Skip values of other keys
@@ -130,15 +194,13 @@ public class RESTService {
     }
 
     void setValues(){
-        userID = getValue("userid");
-        name = getValue("name");
-        invisibleWord = getValue("invisibleword");
-        usedLetters = getValue("usedletters");
-        guessedLetter = getValue("guessedletter");
-        response = getValue("response");
-        gameOver = getValue("gameover");
-        wrongLetters = getValue("wrongletters");
-        Log.e("VALUES SET: ",userID + " " + name  + " " + invisibleWord + " " + usedLetters + " " + guessedLetter + " " + response + " " + gameOver + " " + wrongLetters);
+        userID = JsonReader("userid");
+        name = JsonReader("name");
+        invisibleWord = JsonReader("invisibleword");
+        usedLetters = JsonReader("usedletters");
+        gameOver = JsonReader("gameover");
+        wrongLetters = JsonReader("wrongletters");
+        Log.e("VALUES SET: ",userID + " " + name  + " " + invisibleWord + " " + usedLetters + gameOver + " " + wrongLetters);
     }
 
     String getUserID(){
@@ -155,11 +217,6 @@ public class RESTService {
 
     String getUsedLetters(){
         return usedLetters;
-    }
-
-
-    String getGuessedLetter(){
-        return guessedLetter;
     }
 
     String getResponse(){
@@ -189,10 +246,10 @@ public class RESTService {
     }
 
     public void guessLetter(String s) {
-        connect("?letter=" + s);
+        resetAndLetter("letter",s);
     }
 
     public void resetGame(){
-        connect("?reset=true");
+        resetAndLetter("reset","");
     }
 }

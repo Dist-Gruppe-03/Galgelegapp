@@ -49,28 +49,22 @@ public class Frontpage extends Activity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 String input = user.getText().toString();
-
-                //TODO: TEST THIS
                 if(input.contains("s") && input.length() == 7 && pass.getText() != null){
-                    Log.e("Activtiy", "STARTER");
+                    Log.e("FrontActivity", "Input korrekt, starter første forbindelse");
                     button.setText("Arbejder..");
                     class AsyncTask1 extends AsyncTask {
                         @Override
                         protected Object doInBackground(Object... arg0) {
-
                             try {
                                 //connectionSuccess = RS.connect(user.getText().toString(), "");
                                 connectionSuccess = RS.loginRequest(user.getText().toString(), pass.getText().toString());
-                                connectionSuccess = RS.connect("");
                             } catch (Exception e) {
 
                                 e.printStackTrace();
                             }
                             return null;
                         }
-
                         @Override
                         protected void onPostExecute(Object result) {
                             if(!connectionSuccess){
@@ -83,7 +77,30 @@ public class Frontpage extends Activity {
                                 button.setText("Login");
                             }else {
                                 button.setText("Færdig");
-                                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                                class AsyncTask2 extends AsyncTask {
+                                    @Override
+                                    protected Object doInBackground(Object... arg0) {
+                                        try {
+                                            connectionSuccess = RS.connect();
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                        return null;
+                                    }
+                                    @Override
+                                    protected void onPostExecute(Object result) {
+                                        Log.e("Frontpage","Login complete, launching game");
+                                        if(connectionSuccess){
+                                            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                                        }else{
+                                            alertDialog.setMessage("Der kan ikke oprettes forbindelse til serveren, prøv igen senere");
+                                            alertDialog.show();
+                                            button.setText("Prøv igen");
+                                        }
+                                    }
+                                }
+                                AsyncTask2 a2 = new AsyncTask2();
+                                a2.execute();
                             }
                         }
                     }

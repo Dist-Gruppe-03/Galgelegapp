@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
         guessButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                guessButton.setText("Arbejder..");
                 class AsyncTask1 extends AsyncTask {
                     @Override
                     protected Object doInBackground(Object... arg0) {
@@ -69,11 +70,26 @@ public class MainActivity extends AppCompatActivity {
                     }
                     @Override
                     protected void onPostExecute(Object result) {
-                        if(!RS.connect()){
-                            alertDialog.setMessage("Der kan ikke oprettes forbindelse til serveren, prøv igen senere");
-                            alertDialog.show();
-                        };
-                        updateView();
+                        class AsyncTask2 extends AsyncTask {
+                            @Override
+                            protected Object doInBackground(Object... arg0) {
+                                try {
+                                    if(!RS.connect()){
+                                        alertDialog.setMessage("Der kan ikke oprettes forbindelse til serveren, prøv igen senere");
+                                        alertDialog.show();
+                                    };
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                return null;
+                            }
+                            @Override
+                            protected void onPostExecute(Object result) {
+                                updateView();
+                            }
+                        }
+                        AsyncTask2 a2 = new AsyncTask2();
+                        a2.execute();
                     }
                 }
                 AsyncTask1 a = new AsyncTask1();

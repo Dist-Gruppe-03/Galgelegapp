@@ -130,7 +130,6 @@ public class RESTService {
             e.printStackTrace();
             return false;
         }
-        //TODO: Implement method
     }
 
     boolean resetAndLetter(String resetOrLetter, String letter){

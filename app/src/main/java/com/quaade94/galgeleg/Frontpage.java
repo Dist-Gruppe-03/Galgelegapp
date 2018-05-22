@@ -52,7 +52,7 @@ public class Frontpage extends Activity {
             public void onClick(View view) {
                 button.setClickable(false);
                 String input = user.getText().toString();
-                    if (input.contains("s") && input.length() == 7 && pass.getText() != null) {
+                    if ((input.contains("c") || input.toLowerCase().contains("s")) && (input.length() == 7 || input.length() == 3) && pass.getText() != null) {
                         Log.e("FrontActivity", "Input korrekt, starter første forbindelse");
                         button.setText("Arbejder..");
                         class AsyncTask1 extends AsyncTask {
@@ -74,12 +74,13 @@ public class Frontpage extends Activity {
                                     alertDialog.setMessage("Der kan ikke oprettes forbindelse til serveren, prøv igen senere");
                                     alertDialog.show();
                                     button.setText("Prøv igen");
+                                    button.setClickable(true);
                                 } else if (RS.loginFailed) {
                                     Toast errorToast = Toast.makeText(Frontpage.this, "Forkert bruger/adgangskode", Toast.LENGTH_SHORT);
                                     errorToast.show();
                                     button.setText("Login");
+                                    button.setClickable(true);
                                 } else {
-                                    button.setText("Færdig");
                                     class AsyncTask2 extends AsyncTask {
                                         @Override
                                         protected Object doInBackground(Object... arg0) {
@@ -93,6 +94,7 @@ public class Frontpage extends Activity {
 
                                         @Override
                                         protected void onPostExecute(Object result) {
+                                            button.setText("Færdig");
                                             Log.e("Frontpage", "Login complete, launching game");
                                             if (connectionSuccess) {
                                                 startActivity(new Intent(getApplicationContext(), MainActivity.class));
@@ -112,8 +114,9 @@ public class Frontpage extends Activity {
                         AsyncTask1 a = new AsyncTask1();
                         a.execute();
                     } else {
-                        alertDialog.setMessage("Brugernavn skal have formen: sXXXXXX");
+                        alertDialog.setMessage("Brugernavn skal have formen: 'sXXXXXX' eller 'ccc'");
                         alertDialog.show();
+                        button.setClickable(true);
                     }
 
             }

@@ -34,7 +34,6 @@ public class RESTService {
     URL httpbinEndpoint;
     HttpURLConnection myConnection;
     InputStream in;
-    OutputStream out;
     InputStreamReader inReader;
     OutputStreamWriter outWriter;
     JsonReader jsonReader;
@@ -75,6 +74,7 @@ public class RESTService {
                     return false;
                 }
     }
+
     boolean loginRequest(String user, String pass){
         try{
             this.userID = user;
@@ -102,6 +102,7 @@ public class RESTService {
             outWriter.write(jsonWriter.toString());
             jsonWriter.close();
             outWriter.close();
+
             in = myConnection.getInputStream();
             inReader = new InputStreamReader(in, "UTF-8");
             jsonReader = new JsonReader(inReader);

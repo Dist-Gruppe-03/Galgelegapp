@@ -51,8 +51,6 @@ public class Frontpage extends Activity {
             @Override
             public void onClick(View view) {
                 button.setClickable(false);
-                String input = user.getText().toString();
-                    if ((input.contains("c") || input.toLowerCase().contains("s")) && (input.length() == 7 || input.length() == 3) && pass.getText() != null) {
                         Log.e("FrontActivity", "Input korrekt, starter første forbindelse");
                         button.setText("Arbejder..");
                         class AsyncTask1 extends AsyncTask {
@@ -113,11 +111,7 @@ public class Frontpage extends Activity {
                         }
                         AsyncTask1 a = new AsyncTask1();
                         a.execute();
-                    } else {
-                        alertDialog.setMessage("Brugernavn skal have formen: 'sXXXXXX' eller 'ccc'");
-                        alertDialog.show();
-                        button.setClickable(true);
-                    }
+
 
             }
         });

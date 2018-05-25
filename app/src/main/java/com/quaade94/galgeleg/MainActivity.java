@@ -56,8 +56,8 @@ public class MainActivity extends AppCompatActivity {
                 guessButton.setClickable(false);
                 guessButton.setText("Arbejder..");
                 class AsyncTask1 extends AsyncTask {
-                    @Override
-                    protected Object doInBackground(Object... arg0) {
+                        @Override
+                        protected Object doInBackground(Object... arg0) {
                         try {
                             if(RS.getGameOver()){
                                 RS.resetGame();
